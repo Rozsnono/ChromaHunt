@@ -57,7 +57,7 @@ All configuration is read from environment variables and validated at first use 
 ## Deployment (Vercel Hobby + MongoDB Atlas)
 
 1. Create the Atlas cluster and a database user; allow Vercel's egress (or `0.0.0.0/0` with a strong user password).
-2. Import the repository in Vercel (root directory = repo root; `vercel.json` sets install/build). Set all environment variables.
+2. Import the repository in Vercel with **Root Directory = `apps/web`** (framework Next.js; leave Build/Output/Install commands on their defaults, keep "Include source files outside of the Root Directory" enabled so `packages/shared` is available). `apps/web/vercel.json` only holds the fallback cron. Set all environment variables.
 3. Point `WEBDAV_*` to your WebDAV endpoint (HTTPS, dedicated service account).
 4. **Scheduler:** something must call `GET /api/cron/tick` with `Authorization: Bearer $CRON_SECRET` every 5 minutes (for example a Render cron job or cron-job.org). Without it no daily draws, reminders, scoring or retention cleanups run (the daily Vercel cron in `vercel.json` is only a fallback, and Vercel Hobby cannot run more often).
 5. Open `/admin`, sign in with `ADMIN_PASSWORD`, add palette colors (no active colors = draws are skipped and an alert is raised).
