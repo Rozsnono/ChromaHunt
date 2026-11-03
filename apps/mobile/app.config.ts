@@ -16,7 +16,7 @@ const config: ExpoConfig = {
   icon: './assets/icon.png',
   android: {
     package: 'hu.chromahunt.app',
-    adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', backgroundColor: '#4f46e5' },
+    adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', backgroundColor: '#12122a' },
     permissions: ['CAMERA', 'POST_NOTIFICATIONS', 'USE_BIOMETRIC', 'USE_FINGERPRINT'],
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
     // Gallery access is intentionally never requested: photos are live capture only.
@@ -24,12 +24,12 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-router',
-    ['expo-splash-screen', { image: './assets/splash-icon.png', imageWidth: 200, resizeMode: 'contain', backgroundColor: '#4f46e5' }],
+    ['expo-splash-screen', { image: './assets/splash-icon.png', imageWidth: 200, resizeMode: 'contain', backgroundColor: '#12122a' }],
     'expo-secure-store',
     'expo-sqlite',
     'expo-localization',
     ['expo-camera', { cameraPermission: 'ChromaHunt needs the camera to photograph the daily color.', recordAudioAndroid: false }],
-    ['expo-notifications', { icon: './assets/notification-icon.png', color: '#4f46e5' }],
+    ['expo-notifications', { icon: './assets/notification-icon.png', color: '#7c7cff' }],
     ['expo-local-authentication', { faceIDPermission: 'Unlock ChromaHunt with biometrics.' }],
     'expo-background-task',
   ],
