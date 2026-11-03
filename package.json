@@ -1,0 +1,20 @@
+{
+  "name": "chromahunt",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@12.16.1",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "pnpm --filter @chromahunt/web dev",
+    "dev:mobile": "pnpm --filter @chromahunt/mobile start",
+    "build": "pnpm --filter @chromahunt/web build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.6.0",
+    "typescript": "^5.9.0"
+  }
+}
