@@ -92,6 +92,10 @@ Minden érték környezetből jön, a kódban nincs beégetett érték. `src/ser
 
 `pnpm test`: shared (színmatek, idő, pontozás) + web integrációs tesztek valódi route handlerekkel, in-memory MongoDB replica seten és memória-tárolóval: auth/refresh-reuse, meghívó atomicitás (párhuzamos beváltás), sorsolás egyediség/cooldown, feltöltési folyam (EXIF, token újrajátszás, határidő, 503), retention, fióktörlés kaszkád, pontozás/rangsor, **jogosultsági mátrix** (minden admin route minden permissionre), CSRF, CORS/fejlécek. Hibajavításhoz regressziós tesztet kell írni.
 
+## Android build (mindig lokálban)
+
+Tulajdonosi döntés: az Android buildeket **mindig lokálisan** készítjük, nem az EAS felhőjében. Parancs (`apps/mobile`): `GOOGLE_SERVICES_JSON=<abszolút út a google-services.json-hoz> ANDROID_HOME=… JAVA_HOME=<JDK 17> eas build --local --profile development --platform android --non-interactive --output ./build/chromahunt-dev.apk`. Lokális buildnél a titkos EAS fájlváltozók nem érhetők el, ezért a `google-services.json` abszolút útját környezeti változóban kell megadni (a git-ből kizárt fájl nem kerül be a build archívumba). A keystore az Expo szerverén van (remote credentials). A `build/` kimenet és az `*.apk` gitből kizárt.
+
 ## Kompatibilitási követelmények
 
 Node ≥ 20 (fejlesztés: 24), pnpm workspace. Mobil: **csak Android**, Expo development build (EAS) szükséges kamerához/push/biometriához – Expo Go nem elég. Meglévő működés megőrzése elsődleges; breaking change esetén migráció vagy egyértelmű figyelmeztetés kell. Új dependency csak indokolt esetben.

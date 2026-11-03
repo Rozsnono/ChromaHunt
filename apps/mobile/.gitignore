@@ -9,3 +9,4 @@ google-services.json
 !.env.example
 android
 ios
+build/
