@@ -197,3 +197,15 @@ describe('security headers and CORS (proxy)', () => {
     delete process.env.CORS_ALLOWED_ORIGINS;
   });
 });
+
+describe('operational error reasons', () => {
+  it('maps database and configuration failures to 503 with a coarse reason', async () => {
+    const { toAppError } = await import('@/server/http');
+    const db = toAppError(Object.assign(new Error('bad auth'), { name: 'MongoServerError' }));
+    expect(db).toMatchObject({ status: 503, details: { reason: 'DATABASE' } });
+    const config = toAppError(new Error('Invalid environment configuration: MONGODB_URI: Required'));
+    expect(config).toMatchObject({ status: 503, details: { reason: 'CONFIG' } });
+    expect(JSON.stringify(config.details)).not.toContain('MONGODB_URI');
+    expect(toAppError(new Error('boom'))).toMatchObject({ status: 500 });
+  });
+});

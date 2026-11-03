@@ -51,8 +51,13 @@ export function toAppError(error: unknown): AppError {
   const code = (error as { code?: number }).code;
   if (code === 11000) return new AppError('CONFLICT', 409);
   const name = (error as { name?: string }).name ?? '';
-  if (/MongoServerSelection|MongoNetwork|MongooseServerSelection/.test(name)) {
-    return new AppError('SERVICE_UNAVAILABLE', 503, {}, { 'Retry-After': '10' });
+  // Operational failures get a coarse, non-sensitive reason so a broken deployment is diagnosable
+  // from the response alone (details stay in the server log): no variable names, hosts or values.
+  if (error instanceof Error && error.message.startsWith('Invalid environment configuration')) {
+    return new AppError('SERVICE_UNAVAILABLE', 503, { reason: 'CONFIG' });
+  }
+  if (/^Mongo|^Mongoose/.test(name)) {
+    return new AppError('SERVICE_UNAVAILABLE', 503, { reason: 'DATABASE' }, { 'Retry-After': '10' });
   }
   return new AppError('INTERNAL_ERROR', 500);
 }
