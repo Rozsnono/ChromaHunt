@@ -4,6 +4,7 @@ import type { ExpoConfig } from 'expo/config';
  * Expo configuration. Environment specific values come from the environment, never from code:
  *  - EXPO_PUBLIC_API_URL  base URL of the ChromaHunt backend (https in production)
  *  - GOOGLE_SERVICES_JSON path to the Firebase `google-services.json` (needed for push on Android)
+ *  - EAS_PROJECT_ID       project id printed by `eas init` (needed for push tokens)
  */
 const config: ExpoConfig = {
   name: 'ChromaHunt',
@@ -32,7 +33,8 @@ const config: ExpoConfig = {
     ['expo-local-authentication', { faceIDPermission: 'Unlock ChromaHunt with biometrics.' }],
     'expo-background-task',
   ],
-  extra: { apiUrl: process.env.EXPO_PUBLIC_API_URL },
+  // `eas.projectId` is created by `eas init` (not a secret); push token registration needs it.
+  extra: { apiUrl: process.env.EXPO_PUBLIC_API_URL, eas: { projectId: process.env.EAS_PROJECT_ID } },
 };
 
 export default config;
