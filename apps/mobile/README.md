@@ -11,7 +11,7 @@ pnpm install                                   # from the repository root
 cp apps/mobile/.env.example apps/mobile/.env   # EXPO_PUBLIC_API_URL (+ GOOGLE_SERVICES_JSON)
 ```
 
-- Backend URL: `EXPO_PUBLIC_API_URL`. Android emulator → host machine is `http://10.0.2.2:3000`; production must be HTTPS.
+- Backend URL: `EXPO_PUBLIC_API_URL`. The EAS `preview` and `production` profiles use the production backend `https://apichromahunt.vercel.app`; the `development` profile and debug builds default to the Android emulator's host alias `http://10.0.2.2:3000`. Release builds require HTTPS.
 - Push notifications (Android) need a Firebase project: download `google-services.json`, keep it out of git and point `GOOGLE_SERVICES_JSON` to it (use an EAS file secret for cloud builds). Then run `eas init` so the project id exists (`extra.eas.projectId`); without it push registration is skipped silently.
 
 ## Run
