@@ -33,8 +33,8 @@ const config: ExpoConfig = {
     ['expo-local-authentication', { faceIDPermission: 'Unlock ChromaHunt with biometrics.' }],
     'expo-background-task',
   ],
-  // `eas.projectId` is created by `eas init` (not a secret); push token registration needs it.
-  extra: { apiUrl: process.env.EXPO_PUBLIC_API_URL, eas: { projectId: process.env.EAS_PROJECT_ID } },
+  // `eas.projectId` is created by `eas init` (a public identifier, not a secret); push token registration needs it.
+  extra: { apiUrl: process.env.EXPO_PUBLIC_API_URL, eas: { projectId: process.env.EAS_PROJECT_ID ?? 'ca2fa284-fdfc-4cb8-92bd-aad57c8a0bcc' } },
 };
 
 export default config;
