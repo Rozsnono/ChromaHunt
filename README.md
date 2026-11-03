@@ -2,7 +2,7 @@
 
 A private group color-hunt challenge platform. Each group is assigned one random color per day; members photograph something dominated by that color with the live camera, the server verifies the photo, and an optional weekly ranking scores the group.
 
-> **Status:** backend API and admin web panel are complete (`apps/web`). The Android app (`apps/mobile`, Expo) is code-complete but has not been run on a device yet (see [apps/mobile/README.md](apps/mobile/README.md)). File storage: the `filesharer` driver is implemented and tested against a fake server; the uploader's delete endpoint now exists; it goes live with an API key (see [docs/filesharer-delete-spec.md](docs/filesharer-delete-spec.md)).
+> **Status:** backend API and admin web panel are complete and deployed on Vercel. The Android app lives in the separate `../mobile` project. File storage: the `filesharer` driver is live-verified (see [docs/filesharer-delete-spec.md](docs/filesharer-delete-spec.md)).
 
 - Architecture: [docs/architecture.md](docs/architecture.md)
 - Security model: [docs/security.md](docs/security.md)
@@ -11,34 +11,39 @@ A private group color-hunt challenge platform. Each group is assigned one random
 
 ## Repository layout
 
+Standalone npm project (the Expo app lives in the sibling repository `../mobile`).
+
 ```
-apps/web         Next.js 16 – REST API + admin panel (Tailwind, lucide-react, framer-motion; hu/en)
-apps/mobile      Expo (React Native) Android app (NativeWind, lucide-react-native, Reanimated; hu/en)
-packages/shared  Zod schemas, constants, color math (CIEDE2000, k-means), timezone & scoring helpers
-docs/            Architecture, security and API documentation
+src/app/api      REST route handlers
+src/app/admin    Admin panel (Tailwind, lucide-react, framer-motion; hu/en)
+src/server       Server logic (env, db, auth, models, services, storage drivers)
+src/shared       Zod schemas, constants, color math (CIEDE2000, k-means), timezone & scoring helpers
+                 (copy kept in sync with ../mobile/src/shared)
+tests, scripts   Integration tests, dev database + demo seed
+docs             Architecture, security and API documentation
 ```
 
 ## Quick start (development)
 
-Requirements: Node ≥ 20, pnpm 12 (`corepack enable pnpm`).
+Requirements: Node ≥ 20, npm.
 
 ```bash
-pnpm install
+npm install
 # 1. local MongoDB replica set (transactions need one) on port 27018
-pnpm --filter @chromahunt/web exec node scripts/dev-db.mjs
+node scripts/dev-db.mjs
 # 2. configuration
-cp apps/web/.env.example apps/web/.env.local     # fill in secrets; use STORAGE_DRIVER=fs locally
+cp .env.example .env.local     # fill in secrets; use STORAGE_DRIVER=fs locally
 # 3. run
-pnpm dev                                          # http://localhost:3000 (admin: /admin)
+npm run dev                    # http://localhost:3000 (admin: /admin)
 # 4. optional demo data (palette, users, a group with photos)
-node apps/web/scripts/seed-demo.mjs http://localhost:3000
+node scripts/seed-demo.mjs http://localhost:3000
 ```
 
-Quality gates: `pnpm typecheck && pnpm lint && pnpm test && pnpm build`.
+Quality gates: `npx tsc --noEmit && npm run lint && npm test && npm run build`.
 
 ## Configuration
 
-All configuration is read from environment variables and validated at first use (`apps/web/src/server/env.ts`). See `apps/web/.env.example` for every variable. Generate secrets with `openssl rand -base64 48`. **Never commit real values.**
+All configuration is read from environment variables and validated at first use (`src/server/env.ts`). See `.env.example` for every variable. Generate secrets with `openssl rand -base64 48`. **Never commit real values.**
 
 | Variable | Purpose |
 |---|---|
@@ -57,7 +62,7 @@ All configuration is read from environment variables and validated at first use 
 ## Deployment (Vercel Hobby + MongoDB Atlas)
 
 1. Create the Atlas cluster and a database user; allow Vercel's egress (or `0.0.0.0/0` with a strong user password).
-2. Import the repository in Vercel with **Root Directory = `apps/web`** (framework Next.js; leave Build/Output/Install commands on their defaults, keep "Include source files outside of the Root Directory" enabled so `packages/shared` is available). `apps/web/vercel.json` only holds the fallback cron. Set all environment variables.
+2. Import the repository in Vercel with **Root Directory = empty (repository root)** (framework Next.js; leave Build/Output/Install commands on their defaults). `vercel.json` only holds the fallback cron. Set all environment variables.
 3. Point `WEBDAV_*` to your WebDAV endpoint (HTTPS, dedicated service account).
 4. **Scheduler:** something must call `GET /api/cron/tick` with `Authorization: Bearer $CRON_SECRET` every 5 minutes (for example a Render cron job or cron-job.org). Without it no daily draws, reminders, scoring or retention cleanups run (the daily Vercel cron in `vercel.json` is only a fallback, and Vercel Hobby cannot run more often).
 5. Open `/admin`, sign in with `ADMIN_PASSWORD`, add palette colors (no active colors = draws are skipped and an alert is raised).

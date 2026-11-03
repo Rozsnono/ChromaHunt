@@ -7,7 +7,7 @@
         │ Bearer access token                   │ HttpOnly cookie (env password login)
         └──────────────┬────────────────────────┘
                        ▼
-        Next.js 16 route handlers  (apps/web/src/app/api)
+        Next.js 16 route handlers  (src/app/api)
          validate (Zod) → authorize → service → envelope
                        │
      ┌─────────────────┼───────────────────────┐
@@ -17,7 +17,7 @@
 
 External scheduler → `GET /api/cron/tick` every 5 minutes (draws, reminders, verification of stale uploads, scoring, weekly close, push receipts, storage outbox, hourly retention).
 
-## Code organisation (`apps/web/src/server`)
+## Code organisation (`src/server`)
 
 | Module | Responsibility |
 |---|---|
@@ -37,7 +37,7 @@ External scheduler → `GET /api/cron/tick` every 5 minutes (draws, reminders, v
 | `storage/*` | `StorageDriver` abstraction: WebDAV (prod), local disk (dev), memory (tests) |
 | `notifications.ts` | Localised (hu/en) Expo push, receipts, token cleanup |
 
-Shared logic lives in `packages/shared` (consumed as TypeScript source, no build step): colour math, timezone helpers, scoring, Zod schemas, constants.
+Shared logic lives in `src/shared` (a mobile has its own copy in `../mobile/src/shared`): colour math, timezone helpers, scoring, Zod schemas, constants.
 
 ## Upload and verification flow
 

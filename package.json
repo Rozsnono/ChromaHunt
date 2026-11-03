@@ -1,20 +1,38 @@
 {
-  "name": "chromahunt",
-  "private": true,
+  "name": "chromahunt-backend",
   "version": "0.1.0",
-  "packageManager": "pnpm@12.16.1",
-  "engines": { "node": ">=20" },
+  "private": true,
   "scripts": {
-    "dev": "pnpm --filter @chromahunt/web dev",
-    "dev:mobile": "pnpm --filter @chromahunt/mobile start",
-    "build": "pnpm --filter @chromahunt/web build",
-    "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm -r lint",
-    "test": "pnpm -r test",
-    "format": "prettier --write ."
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.0.2",
+    "framer-motion": "^14.9.0",
+    "jose": "^6.2.15",
+    "lucide-react": "^1.67.0",
+    "mongoose": "^9.11.4",
+    "next": "^16.4.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sharp": "^0.35.5",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "prettier": "^3.6.0",
-    "typescript": "^5.9.0"
+    "@tailwindcss/postcss": "^4.3.4",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.4.4",
+    "mongodb-memory-server": "^11.3.0",
+    "tailwindcss": "^4.3.4",
+    "typescript": "^5.9.0",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
   }
 }

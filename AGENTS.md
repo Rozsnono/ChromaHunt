@@ -10,25 +10,23 @@ Ez a fájl a projekt egyetlen "igazságforrása" emberi fejlesztők és AI-asszi
 
 Privát csoportos színvadász-kihívás platform: a csoportok naponta egy véletlenszerű színt kapnak, a tagok **csak élő kamerával** fotóznak olyan tárgyat, amelyben a szín dominál; a szerver kétlépcsős színellenőrzéssel dönt az elfogadásról; opcionális heti pontverseny, push értesítések, naptáras galéria, admin webfelület.
 
-**Jelenlegi állapot:** a **backend és az admin webfelület kész** (`apps/web`). A **mobilalkalmazás kódja elkészült** (`apps/mobile`, Expo SDK 58, csak Android): auth + biometria, csoportok/meghívó/QR, Ma képernyő, élő kamera (élő színjelző nélkül: az előnézeti képkockák mintavételezése Androidon villogást okozott, ezért az előellenőrzés csak a felvétel után fut), offline feltöltési sor, naptár, rangsor, push, profil. **Eszközön/emulátoron még nem futtattam** (csak typecheck, lint, egységtesztek és Metro Android bundle igazolja), a kamerát/pusht/biometriát valódi eszközön kell kipróbálni (lásd `apps/mobile/README.md`). A fájltároló bekötése (lásd Külső rendszerek) még függőben.
+**Jelenlegi állapot:** a **backend és az admin webfelület kész és Vercelen fut** (ez a repó). A mobilalkalmazás külön projekt: `../mobile` (külön repó, Expo SDK 58, csak Android; lásd annak AGENTS.md-jét). Nincs többé monorepo: a két projekt a PigeonPost mintájára testvérmappa, saját npm-mel.
 
-## Felépítés (pnpm monorepo)
+## Felépítés (önálló npm projekt)
 
 ```
-apps/web            Next.js 16 (App Router): REST API + admin felület
-  src/app/api/**      route handlerek (validate → authorize → execute → respond)
-  src/app/admin/**    admin UI (Tailwind, lucide-react, framer-motion; hu/en)
-  src/server/**       szerveroldali logika (env, db, auth, modellek, szolgáltatások, tároló)
-  src/lib/**          kliensoldali segédek (api kliens, i18n, useApi)
-  src/proxy.ts        biztonsági fejlécek + CORS (Next 16 „proxy", régi „middleware")
-  tests/**            integrációs tesztek (vitest + in-memory MongoDB replica set)
-  scripts/**          dev-db.mjs (helyi MongoDB), seed-demo.mjs (demó adatok)
-apps/mobile         Expo (React Native) Android app: NativeWind (Tailwind), lucide-react-native, Reanimated
-  src/app             Expo Router képernyők ((auth), (gate), (tabs), group/[id], camera, join, photo/[id], profile)
-  src/lib             api-core (boríték, single-flight refresh), session, biometric, upload-queue (SQLite), queue-rules, color-precheck, push
-packages/shared     Zod sémák, konstansok, színmatek (ΔE2000, k-means), időzóna/ISO-hét, pontozás
+src/app/api/**      route handlerek (validate → authorize → execute → respond)
+src/app/admin/**    admin UI (Tailwind, lucide-react, framer-motion; hu/en)
+src/server/**       szerveroldali logika (env, db, auth, modellek, szolgáltatások, tároló)
+src/lib/**          kliensoldali segédek (api kliens, i18n, useApi)
+src/shared/**       Zod sémák, konstansok, színmatek (ΔE2000, k-means), időzóna/ISO-hét, pontozás (+ tesztek)
+src/proxy.ts        biztonsági fejlécek + CORS (Next 16 „proxy", régi „middleware")
+tests/**            integrációs tesztek (vitest + in-memory MongoDB replica set)
+scripts/**          dev-db.mjs (helyi MongoDB), seed-demo.mjs (demó adatok)
 docs/               architecture.md, security.md, api.md
 ```
+
+**Megosztott kód:** `src/shared` másolata megtalálható a mobilban is (`../mobile/src/shared`). Nincs közös csomag; ha a sémák/konstansok/színmatek változnak, **mindkét másolatot együtt kell módosítani** (a tesztek mindkét helyen futnak).
 
 ## Technológiai stack
 
@@ -37,15 +35,17 @@ Mobil: Expo SDK 58 / React Native 0.88, Expo Router, NativeWind 4 (Tailwind 3), 
 ## Indítás, build, teszt
 
 ```bash
-pnpm install                       # (pnpm 12; ha nincs: corepack enable pnpm)
-pnpm --filter @chromahunt/web exec node scripts/dev-db.mjs   # helyi MongoDB replica set (27018)
-cp apps/web/.env.example apps/web/.env.local                 # értékek kitöltése, STORAGE_DRIVER=fs fejlesztéshez
-pnpm dev                           # http://localhost:3000  (admin: /admin)
-node apps/web/scripts/seed-demo.mjs http://localhost:3000    # demó adatok (csak dev)
-pnpm typecheck && pnpm lint && pnpm test && pnpm build
+npm install                        # (.npmrc: legacy-peer-deps)
+node scripts/dev-db.mjs            # helyi MongoDB replica set (27018)
+cp .env.example .env.local         # értékek kitöltése, STORAGE_DRIVER=fs fejlesztéshez
+npm run dev                        # http://localhost:3000  (admin: /admin)
+node scripts/seed-demo.mjs http://localhost:3000   # demó adatok (csak dev)
+npx tsc --noEmit && npm run lint && npm test && npm run build
 ```
 
-## Konfiguráció (környezeti változók – `apps/web/.env.example`)
+Vercel: a repó gyökere a projekt (**Root Directory üres**), `vercel.json` a gyökérben.
+
+## Konfiguráció (környezeti változók – `.env.example`)
 
 Minden érték környezetből jön, a kódban nincs beégetett érték. `src/server/env.ts` Zod-dal validál, hiba esetén olvasható üzenettel elbukik (lusta betöltés, ezért `next build` secret nélkül is lefut). Titkok: `JWT_ACCESS_SECRET`, `UPLOAD_TOKEN_SECRET`, `ADMIN_SESSION_SECRET`, `TOKEN_PEPPER` (HMAC kulcs refresh tokenhez, meghívókódhoz, biometrikus titokhoz – cseréje érvényteleníti azokat), `CRON_SECRET`, `ADMIN_PASSWORD`, `MONGODB_URI`, WebDAV hitelesítő adatok. **Titok soha nem kerülhet gitbe** (`.env*` a `.gitignore`-ban; csak `.env.example` kommitálható). Ha titok mégis bekerült: az érintett credentialt azonnal vissza kell vonni/rotálni és a Git historyból el kell távolítani.
 
@@ -61,7 +61,7 @@ Minden érték környezetből jön, a kódban nincs beégetett érték. `src/ser
 - API válaszboríték: `{success, data, error:{code,message:"error.<CODE>",details}|null, meta:{requestId}}`.
 - Fotó: kliens oldalon max 1080 px JPEG; szerveren újrakódolva (EXIF nélkül, orientáció alkalmazva, max 1080 px, q80), tároló kulcs: `groups/<groupId>/<assignmentId>/<submissionId>.jpg`.
 - Dátumok: `DailyAssignment.date` = helyi `YYYY-MM-DD` a csoport időzónájában; hét = ISO hétkulcs `YYYY-Www`.
-- Mongoose modellek: `apps/web/src/server/models/*` (minden séma `timestamps: true`).
+- Mongoose modellek: `src/server/models/*` (minden séma `timestamps: true`).
 
 ## Fontos üzleti szabályok (összefoglaló)
 
@@ -90,15 +90,15 @@ Minden érték környezetből jön, a kódban nincs beégetett érték. `src/ser
 
 ## Tesztelés
 
-`pnpm test`: shared (színmatek, idő, pontozás) + web integrációs tesztek valódi route handlerekkel, in-memory MongoDB replica seten és memória-tárolóval: auth/refresh-reuse, meghívó atomicitás (párhuzamos beváltás), sorsolás egyediség/cooldown, feltöltési folyam (EXIF, token újrajátszás, határidő, 503), retention, fióktörlés kaszkád, pontozás/rangsor, **jogosultsági mátrix** (minden admin route minden permissionre), CSRF, CORS/fejlécek. Hibajavításhoz regressziós tesztet kell írni.
+`npm test`: shared (színmatek, idő, pontozás) + web integrációs tesztek valódi route handlerekkel, in-memory MongoDB replica seten és memória-tárolóval: auth/refresh-reuse, meghívó atomicitás (párhuzamos beváltás), sorsolás egyediség/cooldown, feltöltési folyam (EXIF, token újrajátszás, határidő, 503), retention, fióktörlés kaszkád, pontozás/rangsor, **jogosultsági mátrix** (minden admin route minden permissionre), CSRF, CORS/fejlécek. Hibajavításhoz regressziós tesztet kell írni.
 
 ## Android build (mindig lokálban)
 
-Tulajdonosi döntés: az Android buildeket **mindig lokálisan** készítjük, nem az EAS felhőjében. Parancs (`apps/mobile`): `GOOGLE_SERVICES_JSON=<abszolút út a google-services.json-hoz> ANDROID_HOME=… JAVA_HOME=<JDK 17> eas build --local --profile development --platform android --non-interactive --output ./build/chromahunt-dev.apk`. Lokális buildnél a titkos EAS fájlváltozók nem érhetők el, ezért a `google-services.json` abszolút útját környezeti változóban kell megadni (a git-ből kizárt fájl nem kerül be a build archívumba). A keystore az Expo szerverén van (remote credentials). A `build/` kimenet és az `*.apk` gitből kizárt.
+Tulajdonosi döntés: az Android buildeket **mindig lokálisan** készítjük, nem az EAS felhőjében. Az Android build a mobil projektben készül (`../mobile`, lásd annak AGENTS.md-jét).
 
 ## Kompatibilitási követelmények
 
-Node ≥ 20 (fejlesztés: 24), pnpm workspace. Mobil: **csak Android**, Expo development build (EAS) szükséges kamerához/push/biometriához – Expo Go nem elég. Meglévő működés megőrzése elsődleges; breaking change esetén migráció vagy egyértelmű figyelmeztetés kell. Új dependency csak indokolt esetben.
+Node ≥ 20 (fejlesztés: 24), npm. Mobil: lásd `../mobile/AGENTS.md`. Meglévő működés megőrzése elsődleges; breaking change esetén migráció vagy egyértelmű figyelmeztetés kell. Új dependency csak indokolt esetben.
 
 ## Kódminőség
 
